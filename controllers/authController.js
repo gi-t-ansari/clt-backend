@@ -2,20 +2,18 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-exports.register = async (req, res) => {
+exports.registerUser = async (req, res) => {
   try {
     const { username, password, role } = req.body;
-
     const user = new User({ username, password, role });
     await user.save();
-
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Registration failed" });
+    res.status(400).json({ error: error.message });
   }
 };
 
-exports.login = async (req, res) => {
+exports.loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
@@ -25,13 +23,15 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      {
+        expiresIn: "1d",
+      }
     );
 
     res.json({ token });
   } catch (error) {
-    res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ error: error.message });
   }
 };
